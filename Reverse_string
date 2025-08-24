@@ -1,0 +1,43 @@
+from flask import Flask, request, render_template_string
+
+app = Flask(__name__)
+
+# Function to reverse a string
+def reverse_string(s):
+    return s[::-1]
+
+# Define the route for GET and POST methods
+@app.route('/', methods=['GET', 'POST'])
+def home():
+    reversed_text = ""
+
+    if request.method == 'POST':
+        input_text = request.form.get('input_text', '')
+        reversed_text = reverse_string(input_text)
+
+    # HTML template as a Python string
+    html_template = '''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Reverse String</title>
+    </head>
+    <body>
+        <h1>Enter text to reverse:</h1>
+        <form method="POST">
+            <input type="text" name="input_text">
+            <button type="submit">Reverse</button>
+        </form>
+
+        {% if reversed_text %}
+            <h2>Reversed Text: {{ reversed_text }}</h2>
+        {% endif %}
+    </body>
+    </html>
+    '''
+
+    return render_template_string(html_template, reversed_text=reversed_text)
+
+# Run the app
+if __name__ == '__main__':
+    app.run(debug=True)
