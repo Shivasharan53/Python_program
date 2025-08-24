@@ -1,0 +1,58 @@
+from flask import Flask, request, render_template_string
+import requests
+from bs4 import BeautifulSoup
+
+app = Flask(__name__)
+
+HTML_TEMPLATE = '''
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quote Scraper</title>
+</head>
+<body>
+    <h2>Scrape Quotes and Authors</h2>
+    <form method="post">
+        <label>Enter URL:</label><br>
+        <input type="text" name="url" value="https://example.com" size="50" required>
+        <br><br>
+        <button type="submit">Scrape</button>
+    </form>
+    {% if quotes %}
+        <h3>Scraped Quotes:</h3>
+        <ul>
+        {% for quote, author in quotes %}
+            <li><strong>"{{ quote }}"</strong> — {{ author }}</li>
+        {% endfor %}
+        </ul>
+    {% elif error %}
+        <p style="color:red;">{{ error }}</p>
+    {% endif %}
+</body>
+</html>
+'''
+
+@app.route('/', methods=['GET', 'POST'])
+def scrape_quotes():
+    quotes = []
+    error = None
+
+    if request.method == 'POST':
+        url = request.form['url']
+        try:
+            response = requests.get(url)
+            soup = BeautifulSoup(response.text, 'html.parser')
+            quote_blocks = soup.find_all('div', class_='quote')
+
+            for block in quote_blocks:
+                text = block.find('span', class_='text').get_text(strip=True)
+                author = block.find('small', class_='author').get_text(strip=True)
+                quotes.append((text, author))
+
+        except Exception as e:
+            error = f"Error: {str(e)}"
+
+    return render_template_string(HTML_TEMPLATE, quotes=quotes, error=error)
+
+if __name__ == '__main__':
+    app.run(debug=True)
