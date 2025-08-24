@@ -1,0 +1,38 @@
+from flask import Flask, request, render_template_string
+import re
+
+app = Flask(__name__)
+
+# HTML template for user input
+form_template = """
+<!doctype html>
+<title>Email Validator</title>
+<h2>Email Validator</h2>
+<form method="post">
+  Enter email: <input type="text" name="email">
+  <input type="submit" value="Validate">
+</form>
+{% if result %}
+  <p>{{ result }}</p>
+{% endif %}
+"""
+
+# Function to validate email using regex
+def is_valid_email(email):
+    # Basic regex to check for proper email format
+    pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+    return re.match(pattern, email)
+
+@app.route('/', methods=['GET', 'POST'])
+def validate_email():
+    result = None
+    if request.method == 'POST':
+        email = request.form['email']
+        if is_valid_email(email):
+            result = f"✅ '{email}' is a valid email address."
+        else:
+            result = f"❌ '{email}' is NOT a valid email address."
+    return render_template_string(form_template, result=result)
+
+if __name__ == '__main__':
+    app.run(debug=True)
