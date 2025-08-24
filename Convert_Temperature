@@ -1,0 +1,53 @@
+from flask import Flask, request, render_template_string
+
+app = Flask(__name__)
+
+# Temperature conversion logic
+def convert_temperature(value, unit):
+    if unit == 'C':
+        return (value * 9/5) + 32  # Celsius to Fahrenheit
+    elif unit == 'F':
+        return (value - 32) * 5/9  # Fahrenheit to Celsius
+    else:
+        return None
+
+# Main route handling both GET and POST
+@app.route('/', methods=['GET', 'POST'])
+def home():
+    result = None
+    unit = ''
+
+    if request.method == 'POST':
+        try:
+            temp = float(request.form['temperature'])
+            unit = request.form['unit']
+            result = round(convert_temperature(temp, unit), 2)
+        except ValueError:
+            result = "Invalid input"
+
+    # HTML template embedded as string
+    html_template = '''
+    <!DOCTYPE html>
+    <html>
+    <head><title>Temperature Converter</title></head>
+    <body>
+        <h2>Convert Celsius ↔ Fahrenheit</h2>
+        <form method="post">
+            <input type="number" name="temperature" step="any" required>
+            <select name="unit">
+                <option value="C" {% if unit == 'C' %}selected{% endif %}>Celsius</option>
+                <option value="F" {% if unit == 'F' %}selected{% endif %}>Fahrenheit</option>
+            </select>
+            <button type="submit">Convert</button>
+        </form>
+        {% if result is not none %}
+            <p>Converted Temperature: {{ result }}°{% if unit == 'C' %}F{% else %}C{% endif %}</p>
+        {% endif %}
+    </body>
+    </html>
+    '''
+    return render_template_string(html_template, result=result, unit=unit)
+
+# Run the app
+if __name__ == '__main__':
+    app.run(debug=True)
